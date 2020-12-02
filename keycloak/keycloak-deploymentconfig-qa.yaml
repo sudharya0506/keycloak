@@ -14,15 +14,7 @@ spec:
       labels:
         name: keycloak
     spec:
-      affinity:
-       ​ podAntiAffinity:
-          ​preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            ​podAffinityTerm:
-              ​labelSelector:
-                ​matchLabels:
-                  deployment-nodegroup: 'qa'
-              topologyKey: kubernetes.io/hostname
+      
       containers:
       - env:
         - name: KEYCLOAK_USER
