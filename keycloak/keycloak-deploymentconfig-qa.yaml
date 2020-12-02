@@ -2,7 +2,7 @@ apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
 metadata:
   name: keycloak
-  namespace: equator-mms-qa
+  namespace: namespace
 spec:
   replicas: 2
   revisionHistoryLimit: 10
@@ -47,7 +47,7 @@ spec:
         - name: DB_VENDOR
           value: "MYSQL"
         - name: DB_ADDR
-          value: "10.14.255.51"
+          value: "x.x.x.x"
         - name: JDBC_PARAMS
           value: "allowPublicKeyRetrieval=true&autoReconnect=true&useUnicode=yes&characterEncoding=UTF-8&useSSL=false" ###https://keycloak.discourse.group/t/keycloak-10-0-x-and-11-0-0-fails-to-connect-to-the-database/3917
         - name: DB_DATABASE
