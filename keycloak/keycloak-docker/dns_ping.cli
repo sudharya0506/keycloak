@@ -1,0 +1,9 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
+
+/subsystem=jgroups/channel=ee:write-attribute(name="stack",value="tcp")
+/subsystem = jgroups/stack=tcp/protocol=MPING:remove()
+/subsystem=jgroups/stack=tcp/protocol=dns.DNS_PING:add(add-index=0, properties=$keycloak_jgroups_discovery_protocol_properties)
+
+run-batch
+stop-embedded-server

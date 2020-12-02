@@ -1,0 +1,112 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: keycloak
+  namespace: equator-mms-qa
+spec:
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    name: keycloak
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: keycloak
+    spec:
+      affinity:
+       ​ podAntiAffinity:
+          ​preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            ​podAffinityTerm:
+              ​labelSelector:
+                ​matchLabels:
+                  deployment-nodegroup: 'qa'
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - env:
+        - name: KEYCLOAK_USER
+          value: "admin"
+        - name: KEYCLOAK_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: keycloak_password
+        - name: JAVA_OPTS
+          value: -Dkeycloak.profile.feature.scripts=enabled -Dkeycloak.profile.feature.upload_scripts=enabled -Djava.net.preferIPv4Stack=true -Djava.awt.headless=true
+        - name: JGROUPS_DISCOVERY_PROTOCOL
+          value: "dns.DNS_PING"
+        - name: JGROUPS_DISCOVERY_PROPERTIES
+          value: "dns_query=keycloak.equator-mms-qa.svc.cluster.local"
+        - name: CACHE_OWNERS_COUNT
+          value: "2"
+        - name: CACHE_OWNERS_AUTH_SESSIONS_COUNT
+          value: "2"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: DB_VENDOR
+          value: "MYSQL"
+        - name: DB_ADDR
+          value: "10.14.255.51"
+        - name: JDBC_PARAMS
+          value: "allowPublicKeyRetrieval=true&autoReconnect=true&useUnicode=yes&characterEncoding=UTF-8&useSSL=false" ###https://keycloak.discourse.group/t/keycloak-10-0-x-and-11-0-0-fails-to-connect-to-the-database/3917
+        - name: DB_DATABASE
+          value: "keycloak_qa"
+        - name: DB_USER
+          value: "keycloak"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: mysql_password
+        #image: docker-registry.default.svc:5000/equator-mms-qa/keycloak:stable
+        image: quay.io/mka47/keycloak:v2
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: "TCP"
+          - name: https
+            containerPort: 8443
+            protocol: "TCP"
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /auth/realms/master
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 600
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: keycloak
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /auth/realms/master
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1024Mi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+        securityContext:
+          capabilities: {}
+          privileged: false
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        deployment-nodegroup: qa
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  test: false
+  triggers:
+  - type: ConfigChange

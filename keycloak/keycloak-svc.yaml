@@ -1,0 +1,29 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: keycloak-service
+spec:
+  selector:
+    deploymentconfig: keycloak
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: NodePort
+
+---
+kind: Service
+apiVersion: v1
+spec:
+  ports:
+    - port: 8443
+      targetPort: 8443
+      name: 8443-tcp
+  selector:
+    deploymentConfig: keycloak
+  type: NodePort
+metadata:
+  name: secure-keycloak
+  labels:
+    application: keycloak
